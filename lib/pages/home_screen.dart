@@ -1,4 +1,6 @@
+import 'package:attendance_app/controllers/history_controller.dart';
 import 'package:attendance_app/services/user_service.dart';
+import 'package:attendance_app/widgets/attendance_history.dart';
 import 'package:attendance_app/widgets/main_card.dart';
 import 'package:attendance_app/widgets/profile_info.dart';
 import 'package:attendance_app/widgets/theme_toggle.dart';
@@ -9,6 +11,8 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
   final UserService userService = Get.find<UserService>();
+
+  final HistoryController _historyController = Get.put(HistoryController());
 
   @override
   Widget build(BuildContext context) {
@@ -29,21 +33,21 @@ class HomeScreen extends StatelessWidget {
         ],
         actionsPadding: EdgeInsets.only(right: 16),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Maincard(userService: userService),
-            SizedBox(height: 24),
-            Text(
-              'Your History',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Divider(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _historyController.loadData();
+        },
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Maincard(userService: userService),
+              SizedBox(height: 24),
+              AttendanceHistory(),
+            ],
+          ),
         ),
       ),
     );

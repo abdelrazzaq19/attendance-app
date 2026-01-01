@@ -2,12 +2,14 @@ import 'dart:developer';
 
 import 'package:attendance_app/core/constant.dart';
 import 'package:attendance_app/core/routes.dart';
+import 'package:attendance_app/models/attendance_model.dart';
 import 'package:attendance_app/models/user_model.dart';
 import 'package:attendance_app/services/permission_services.dart';
 import 'package:attendance_app/utils/helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 class UserService extends GetxService {
@@ -18,6 +20,16 @@ class UserService extends GetxService {
 
   Rxn<User> firebaseUser = Rxn<User>();
   Rxn<UserModel> firestoreUser = Rxn<UserModel>();
+
+  List<double> get getFaceEmbedding {
+    final List<dynamic>? embedding = firestoreUser.value?.faceEmbedding;
+
+    if (embedding == null) {
+      return [];
+    }
+
+    return embedding.map((e) => e as double).toList();
+  }
 
   @override
   void onReady() {
@@ -112,6 +124,45 @@ class UserService extends GetxService {
     } on Exception catch (e) {
       log('Failed to save embedding: $e');
       throw Exception('Failed to save embedding: $e');
+    }
+  }
+
+  Future<void> recordAttendance(Position position, double distance) async {
+    try {
+      final AttendanceModel data = AttendanceModel(
+        userId: firebaseUser.value!.uid,
+        type: 'clock-in',
+        location: GeoPoint(position.latitude, position.longitude),
+        distanceToTargetMeters: distance,
+        timeStamp: Timestamp.now(),
+      );
+      await _firestore
+          .collection(Constant.attendanceCollection)
+          .add(data.toMap())
+          .then((value) => Helper.showSuccess('You have clocked in'));
+    } on FirebaseException catch (e) {
+      log('Failed to record attendance: $e');
+      Helper.showError('Failed to record attendance');
+    }
+  }
+
+  Future<List<AttendanceModel>> loadAttendance() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(Constant.attendanceCollection)
+          .where('userId', isEqualTo: firebaseUser.value!.uid)
+          .orderBy('timeStamp', descending: true)
+          .get();
+
+      final List<AttendanceModel> attendanceList = querySnapshot.docs
+          .map((doc) => AttendanceModel.fromMap(doc.data()))
+          .toList();
+
+      return attendanceList;
+    } on FirebaseException catch (e) {
+      log('Failed to load attendance: $e');
+      Helper.showError('Failed to load attendance');
+      throw Exception('Failed to load attendance: $e');
     }
   }
 }

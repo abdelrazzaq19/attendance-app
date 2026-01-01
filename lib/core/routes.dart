@@ -5,6 +5,7 @@ import 'package:attendance_app/pages/home_screen.dart';
 import 'package:attendance_app/pages/login_screen.dart';
 import 'package:attendance_app/pages/register_screen.dart';
 import 'package:attendance_app/pages/request_camera_page.dart';
+import 'package:attendance_app/pages/request_location_page.dart';
 import 'package:attendance_app/pages/root_screen.dart';
 import 'package:get/get.dart';
 
@@ -15,6 +16,7 @@ class AppRouter {
   static const String register = '/register';
   static const String requestCamera = '/request_camera';
   static const String enroll = '/enroll';
+  static const String requestLocation = '/request_location';
   static const String attendance = '/attendance';
 
   static const String initialRoute = root;
@@ -36,6 +38,13 @@ class AppRouter {
       },
     ),
     GetPage(name: enroll, page: () => EnrollScreen()),
-    GetPage(name: attendance, page: () => AttendanceScreen()),
+    GetPage(
+      name: requestLocation,
+      page: () {
+        final RequestLocationProps args = Get.arguments as RequestLocationProps;
+        return RequestLocationPage(props: args);
+      },
+    ),
+    GetPage(name: attendance, page: () => AttendanceScreen()), 
   ];
 }

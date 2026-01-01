@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' hide log;
 import 'dart:typed_data';
 
 import 'package:attendance_app/core/constant.dart';
@@ -74,7 +75,7 @@ class FaceRecognitionService extends GetxService {
       height: boundingBox.height.toInt(),
     );
 
-    final img.Image resizedImage = img.copyResize( 
+    final img.Image resizedImage = img.copyResize(
       croppedImage,
       width: _inputSize,
       height: _inputSize,
@@ -125,5 +126,19 @@ class FaceRecognitionService extends GetxService {
     }
 
     return embeddingList;
+  }
+
+  bool compareFace(List<double> newEmbedding, List<double> existingEmbedding) {
+    double threshold = 1.0;
+
+    double sumOfSquares = 0.0;
+
+    for (int i = 0; i < newEmbedding.length; i++) {
+      double diff = newEmbedding[i] - existingEmbedding[i];
+      sumOfSquares += diff * diff;
+    }
+
+    double distance = sqrt(sumOfSquares);
+    return distance < threshold;
   }
 }

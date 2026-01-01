@@ -14,7 +14,7 @@ class PermissionServices extends GetxService {
     return _convertStatus(status);
   }
 
-  Future<PermissionState> get locationPermissionSatits async {
+  Future<PermissionState> get locationPermissionStatus async {
     final status = await Permission.location.status;
     return _convertStatus(status);
   }
